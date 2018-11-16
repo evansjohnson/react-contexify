@@ -22,6 +22,11 @@ export interface ItemProps extends StyleProps {
   disabled: boolean | ((args: MenuItemEventHandler) => boolean);
 
   /**
+   * Disable or not the `Item`. If a function is used, a boolean must be returned
+   */
+  dontCloseOnClick: boolean;
+
+  /**
    * Callback when the current `Item` is clicked. The callback give you access to the current event and also the data passed
    * to the `Item`.
    * `({ event, props }) => ...`
@@ -50,12 +55,14 @@ class Item extends Component<ItemProps> {
     nativeEvent: PropTypes.object,
     propsFromTrigger: PropTypes.object,
     className: PropTypes.string,
-    style: PropTypes.object
+    style: PropTypes.object,
+    dontCloseOnClick: PropTypes.bool
   };
 
   static defaultProps = {
     disabled: false,
-    onClick: noop
+    onClick: noop,
+    dontCloseOnClick: false
   };
 
   isDisabled: boolean;
@@ -74,12 +81,16 @@ class Item extends Component<ItemProps> {
   }
 
   handleClick = (e: React.MouseEvent) => {
-    this.isDisabled
-      ? e.stopPropagation()
-      : this.props.onClick({
-          event: this.props.nativeEvent as TriggerEvent,
-          props: { ...this.props.propsFromTrigger, ...this.props.data }
-        });
+    if (this.isDisabled || this.props.dontCloseOnClick) {
+      e.stopPropagation();
+    }
+
+    if (!this.isDisabled) {
+      this.props.onClick({
+        event: this.props.nativeEvent as TriggerEvent,
+        props: { ...this.props.propsFromTrigger, ...this.props.data }
+      });
+    }
   };
 
   render() {
